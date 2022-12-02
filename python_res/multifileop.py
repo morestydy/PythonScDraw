@@ -59,17 +59,22 @@ import shutil
 # =============================================================================
 # 3. 文件重命名
 # =============================================================================
-dstpath = Path(r"python_res\dstfile")
-filelist = dstpath.rglob('*.csv')
+# dstpath = Path(r"python_res\dstfile")
+# filelist = dstpath.rglob('*.csv')
 
-for index,f in enumerate(filelist):
-    name = 'testdata'+str(index+1)+'.csv'
-    f.rename(f.parent/name)
+# for index,f in enumerate(filelist):
+#     name = 'testdata'+str(index+1)+'.csv'
+#     f.rename(f.parent/name)
 # =============================================================================
 # 4. 文件批量合并
 # =============================================================================
 # 如果文件中不存在中文，则直接合并即可
-
+srcfolder = Path(r'python_res\sample_data')
+dsData = pd.DataFrame()
+for f in srcfolder.rglob('*.csv'):
+    df = pd.read_csv(f)
+    dsData = pd.concat([dsData,df],index = False)#index不写入索引
+dsData.to_csv(r'python_res\sample_data\alide.csv')
 #如果文件中存在中文，出现乱码时，可以先获取文件编码格式，然后再读取相关内容
 #注意自动获取编码时，需要先导入import chardet
 # 获取文件编码类型的函数

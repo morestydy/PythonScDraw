@@ -369,6 +369,12 @@
 
       pd.append(df2)
 
+      
+      
+      
+      
+      
+      
       ```python
       from pathlib import Path
       import shutil
@@ -390,14 +396,132 @@
       scrfolder = Path('./file')
       for file in scefolder.rglob('*.txt'):
               shutil.copy(file,dstfile)
-      ### 批量重命名
+      ```
+### 批量重命名
       filepath = Path('./filep')
       for index,file in enumerate(filepath.rglob('*.csv')):
                name = 'testdate'+str(index+1)+'.csv'
                file.name(name)
-      ```
 
-      
+
+### 数据预处理
+
+1. 缺失数据的查找与处理
+
+   - `np.nan(Not-a-Number,缺失数值)`
+
+     float类型,可用于数学计算,但返回nan值
+
+   - `pd.NaT(缺失时间)`
+
+   - `pd.read_csv(filep,na_values=['999','e])`出现999,e自动用NaN代替
+
+   <img src="py-lea.assets/image-20221202163824051.png" alt="image-20221202163824051" style="zoom:50%;" />
+
+   + `df.isna()`:True:有缺失值,False:没有缺失值
+
+     <img src="py-lea.assets/image-20221202164342133.png" alt="image-20221202164342133" style="zoom:50%;" />
+
+     - 判断每列是否存在缺失值：`df.isna().any()`
+     - 判断每行是否存在缺失：`df.isna().any(axis = 1)`
+     - 判断整个Dataframe中是否存在缺失值df.isna().any().any()
+     - 每列缺失个数:`df.isna().sum()`
+     - 每行缺失值个数：`df.isna().sum(axis=1)`
+     - Dataframe中缺失值总个数:`df.isna().sum().sum()`
+
+   + 删除缺失数据`df.dropna()`
+
+     + 删除包含1个以上缺失值的列：`df.dropna(axis =1)`
+     + 保留至少有2个非NaN数据的行：`df.dropna(thresh=2)`
+     + 删除所有数据均缺失的行：`df.dropna(how='all')`
+     + 指定删除指定列中含有缺失值的行：`df.dropna(subset=['A'，'C'])`
+     + 原地代替，将删除后的值更新至变量：`df.dropna(inplace=True)`
+       + 等价于`df = df.dropna()`
+
+   + 填充确实数据`df.fillna()`
+
+     + 特定数值：
+
+       `df.fillna(0，inplace=True)`
+       `df = df.fillna(0)`
+
+     + 每列分别制定数值
+       `values =['A'：0，'B'：1]`
+
+       `df.fillna(value = values)`
+
+     + 前其他数值填充：
+       前值：`df.fillna(method='ffill')`
+       后值：`df.fillna(method='bfill')`
+       平均：`df.fillna(df.mean)`
+       最大：`df.fillna(df.max)`
+
+2. 重复数据的查找与处理
+
+   + 查找重复数据`df.duplicated()`:True：有重复值；False:没有重复值
+     + 查找指定列重复的数据：`df.duplicated)subset =['A'，'C'])`
+   + 删除重复数据`df.drop_duplicates()`
+     + 保留第一次出现的重复行，删除后面的重复行：df.drop_duplicates))
+       keep = False/'first'/'Last'：删除时是否保留第一项、最后一项
+     + 删除指定列相同的数据：`df.drop_duplicates(subset=['A'，'C'])`
+     + `inplace=True`：原地替代
+
+   <img src="py-lea.assets/image-20221202170111398.png" alt="image-20221202170111398" style="zoom:50%;" />
+
+   
+
+3. 异常数据的查找与处理
+
+   + df[异常条件]
+
+     + `df[df.A >=2]`：显示所有A列值大于2的
+       所有行数据
+     + 多个条件时，使用&或|进行连接如：`df[(df.A >= 2)&(df.B > = 1)]`
+
+   + df[异常条件]=替换值
+
+     + df.describe()：返回数据的统计信息
+
+     <img src="py-lea.assets/image-20221202171403859.png" alt="image-20221202171403859" style="zoom:50%;" />
+
+4. 离散化与面元划分`pd.cut()`
+   
+   + `ages =[18，22，25，27，21，23，37，31，61，45，41，32]`
+   
+   + `bins =[0，10，18，30，50，100]`
+   
+     - 划分至5个区间：`(0，10]，(10，18]，(18，30]，(30，50]，(50，100]`
+   
+   + `cats = pd.cut(ages，bins)`
+   
+     - right=False：设置为左闭右开													
+     - cats.codes获得划分结果：[122222334333]
+     - pd.value_counts(cats)：返回面元计数结果
+     - labels =[儿童'，'少年'，'青年'，'中年'，'老年]
+       <img src="py-lea.assets/image-20221202171902222.png" alt="image-20221202171902222" style="zoom:33%;" />
+   
+   + `cats = pd.cut(ages, 4, precision = 2)`
+   
+     + 将数据分成4组，限定小数为2位
+     + (61-18)/4：最大值-最小值，除以划分个数，得出的时每个区间的年龄范围，计算结果为10.75，则自动生成)28.75，39.5，50.25，61.0)
+     + 不指定面元切分的起始结束值，而是指定面元切分的个数)切成几份)，自动计算面元起始与结束值
+   
+   + `cats = pd.qcut(ages，[0，0.1，0.5，0.9，1.0])`
+   
+     + 将数据按照自定义分位数)0-1之间的数值，包括端点)
+   
+     + cats = pd.qcut(ages，4)
+   
+       - 将数据按照四分位数进行切割:
+   
+         等频划分：pd.qcut(ages，4)
+         等宽划分：pd.cut(ages，4)
+   
+     + cats.codes：获得划分结果
+       pd.value_counts(cats)：返回面元计数结果
+
+
+
 
 ## 爬虫
 
