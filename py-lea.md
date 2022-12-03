@@ -520,7 +520,221 @@
      + cats.codes：获得划分结果
        pd.value_counts(cats)：返回面元计数结果
 
+### 数据提取与筛选
 
+1. 按位置提取数据
+
+   通过行列位置索引提取数据
+
+   1. 按位置单一行或不连续行数据
+
+   + 提取单行数据
+
+     `df.iloc[n-1]`:索引序号由0开始
+
+   <img src="py-lea.assets/image-20221203225959697.png" alt="image-20221203225959697" style="zoom:67%;" />
+
+   + 提取连续多行数据
+     + `df.iloc[m:n]`:提取m~n-1行
+
+     + `df.iloc[:n]`提取0~n-1行
+
+     + `df.iloc[m:]`提取m至最后一行
+
+       左闭右开
+
+   + 其他表示形式
+     + `df[m：n]`:提取m~n-1行
+
+     + df.head(n)/df.tail(n)：
+
+       省略n时，显示最前/后5行
+
+   2. 按位置提取不连续的多行数据
+
+      + 通过行索引提取
+
+        + `df.iloc[[0,2]]`:提取行索引为0、2的行数据
+
+          <img src="py-lea.assets/image-20221203231100249.png" alt="image-20221203231100249" style="zoom:30%;" />
+
+      + 采用布尔值提取
+
+        + `df.iloc[[True,False,True,False]]`
+          - 每个布尔值与每行数据一一对应
+          - True表示提取
+
+      + 采用表达式作为索引
+
+        + `df.iloc[lambda x: x.index %2 == 0]`
+
+          lambda:定义了一个匿名函数
+
+          冒号前为参数，可以又多个，用逗号隔开
+
+          冒号后面为表达式
+
+          输出为表达式计算到的值
+
+   3. 按位置获取单一列或连续列数据
+
+      + 提取单列数据
+        + `df.iloc[:,n-1]`<img src="py-lea.assets/image-20221203232018592.png" alt="image-20221203232018592" style="zoom:33%;" />
+      + 连续提取多列数据
+        + `df.iloc[:,m:n]`：提取m~n-1列数据
+
+   4. 按位置提取不连续的多列数据
+
+      - 采用列索引提取
+
+        `df.iloc[:,[0,2]]`:提取索引为0、2的列数据
+
+      - 采用布尔值提取
+
+        `df.iloc[:,[False,True]]`<img src="py-lea.assets/image-20221203232451997.png" alt="image-20221203232451997" style="zoom:50%;" />
+
+   5. 按位置提取块数据<img src="py-lea.assets/image-20221203232544071.png" alt="image-20221203232544071" style="zoom:33%;" />
+
+      <img src="py-lea.assets/image-20221203232606548.png" alt="image-20221203232606548" style="zoom:50%;" />
+
+   
+
+2. 按标签提取数据
+
+   1. 按标签提取单一行或连续行数据
+
+      + 提取单行数据
+
+        自定义行索引时(index为字符)：
+
+        `df.loc['a']`
+
+        默认行索引时（index时数值）：
+
+        `df.loc[0]`<img src="py-lea.assets/image-20221203232903100.png" alt="image-20221203232903100" style="zoom:33%;" />
+
+      + 提取连续多行数据
+
+        `df.loc['a':'c']`:提取a~c行
+
+        `df.loc[:'c']`提取首行至c行
+
+        `df.loc['b':]`:提取b行至最后一行<img src="py-lea.assets/image-20221203233208451.png" alt="image-20221203233208451" style="zoom:50%;" />
+
+   2. 按标签提取不连续的多行数据
+
+      + 采用行标签提取
+
+        df.loc[['a','c']]<img src="py-lea.assets/image-20221203233406456.png" alt="image-20221203233406456" style="zoom:50%;" />
+
+      + 采用布尔值提取
+
+        df.loc[[T,F]]
+
+   3. 按标签提取单一列或连续列数据
+
+      + 提取单列数据
+
+        `df.loc[:,'A']`
+
+        `df.A`
+
+        `df['A']`
+
+      + 提取连续多列数据
+
+        `df.loc[:,'A','B']`
+
+        `df.loc[:,'B']`
+
+        `df.loc[:,'B':]`
+
+   4. 按标签提取不连续的多列数据
+
+      `df.loc[:,[True, False, True]]`
+
+   5. 按标签提取块数据
+
+      + 单一数据抽取： `df.loc[‘a’,‘A’]`
+
+      + 块数据提取：<img src="py-lea.assets/image-20221203234247164.png" alt="image-20221203234247164" style="zoom:67%;" />
+
+3. 按条件筛选数据`df[筛选条件]`
+
+   1. 单个条件筛选
+
+      + 选取符合条件的整行数据：`df[df.Gender == ‘M’]`,`df[df.Age>18]`
+
+      + 选取符合条件的指定列数据：
+
+        ​	特定一列：`df.Name[df.Gender==‘M’]`
+
+        ​	特定多列：`df[['Name','Age']][df.Gender=='M']`
+
+   2. 多个条件筛选
+
+      + 多个与条件筛选, 使用“&”连接：`df[(df.Age == 5)&(df.Gender =='M')]`
+      + 多个或条件筛选, 使用“|”连接：`df[(df.Age == 5)|(df.Age == 6)]`
+      + 如果多个或条件针对同一列数据，也可以：
+        `age = [5, 6]
+        df[df.Age.isin(age)]`
+
+   3. 按模糊条件筛选数据`str.contains()`
+
+      模糊匹配即包含相关字符
+      `df[df[‘Diagnose’].str.contains('白血病')]`
+      • 多个模糊匹配的条件使用‘|’相连
+      `df[df[‘Diagnose’].str.contains(‘白血病|血癌’)]`
+
+      
+
+4. 数据修改
+
+   1. 行列标签值修改
+
+      + 分别修改行或列标签
+
+        行标签修改：
+        `df.index = ['a', 'b', 'c', 'd']`
+        • 列标签修改：
+        `df.columns = ['A', 'B', 'C’]`
+
+      + 同时或部分修改行列标签
+
+        重命名行列标签
+
+        ```python
+        df.rename(
+        columns={‘A':’A1',’B':’B2’},
+        index = {0:’a',1:’b’},
+        inplace = True)
+        
+        ```
+
+      + 数据修改
+
+        • 修改某个单独元素：
+
+        `df.iloc[0,0] = 100`
+        • 修改某行数据：
+        `df.iloc[1] = ['lily','F',15]`
+        • 修改某列数据
+        `df.iloc[:,2]=[11,22,33]`
+        • 修改部分数据：
+        `df.iloc[0,[1,2]] = ['bb',11]`
+
+        • 修改某个单独元素：
+        `df.loc[‘a’,‘A’] = 100`
+        • 修改某行数据：
+        `df.loc[‘b’] = ['lily','F',15]`
+        • 修改某列数据：
+        `df.loc[:,‘C’]=[11,22,33]`
+        • 修改部分数据：
+        `df.loc[‘a’,[‘B’,‘C’]] = ['bb',11]`
+
+5. 本课小节
+
+   ![3.4 数据提取与筛选[22]](py-lea.assets/3.4 数据提取与筛选[22].png)
 
 
 ## 爬虫
