@@ -736,6 +736,280 @@
 
    ![3.4 数据提取与筛选[22]](py-lea.assets/3.4 数据提取与筛选[22].png)
 
+## 本章回顾
+
++ pandas + 单一文件读写: 使用前先导入`import pandas as pd`
+  + 两大数据结构:series(带索引的一维数组),DataFrame(表格型的数据结构)
+  + 读取文件:`pd.read_csv()`,`pd.read_excel`
+  + 写入文件:`pd.to_csv()`,`pd.to_excel()`
++ pathlib+批量文件操作:`import pathlib import Path`
+  + 获取目录下文件列表:`f.rglob('*.*')`
+  + 批量文件操作:循环+复制,重命名,合并
++ 数据清洗:缺失值(np.nan,pd.NaT),重复值,异常值处理,离散化和面元划分
++ 数据提取:
+  + 基于索取位置`iloc[行索引,列索引]`
+  + 基于索引名称的索引`loc[行索引名,列索引名]`
++ 数据转换:排序排名,层次化索引,重塑和轴向旋转,分组变换
+
+eg:
+
+***
+
+![image-20221218152425491](py-lea.assets/image-20221218152425491.png)
+
+## 绘图
+
+### 基线表的制作
+
++ 使用TableOne[^1]库`from tableone import TableOne`
+
++ `table  = TableOne(df)`
+
+  df:需要汇总的dataframe数据
+
+  ![image-20221218170508302](py-lea.assets/image-20221218170508302.png)
+
++ 不显示缺失值的统计`missing = False`
+
++ 不显示SD,n(%)等信息`lable_suffix=False`
+
++ 使用columns参数调整变量顺序
+
+  ```python
+  columns_label = ['Age','SysABP','Height','Weight','LOS','ICU','death']
+  table1 = TableOne(df,columns=columns_label)
+  ```
+
+  ***
+
+  ```shell
+                        Missing       Overall
+  n                                       1000
+  Age, mean (SD)               0   65.0 (17.2)
+  SysABP, mean (SD)          291  114.3 (40.2)
+  Height, mean (SD)          475  170.1 (22.1)
+  Weight, mean (SD)          302   82.9 (23.8)
+  LOS, mean (SD)               0   14.2 (14.2)
+  ICU, n (%)        CCU        0    162 (16.2)
+                    CSRU            202 (20.2)
+                    MICU            380 (38.0)
+                    SICU            256 (25.6)
+  death, n (%)      0          0    864 (86.4)
+                    1               136 (13.6)
+  
+  ```
+
++ 指定分类变量
+
+  + 使用categorical参数进行设置`categorical=['ICU']`
+
++ 设置分类值得显示顺序
+
+  + 使用order参数进行设置`order={'ICU':['SICU','CSRU','MICU','CCU']`
+
++ tableone设置非正态变量的连续变量
+
+  + 通过nonnormal参数进行指定
+
+    tableone默认连续变量呈正态分布,直接描述其均值与方差
+
+    设置非正态分布的连续变量:`nonnormal=['Age','Height']`
+
+    ![image-20221218183115542](py-lea.assets/image-20221218183115542.png)
+
+  + 通过min_max参数的设置,不进行方差或四分位数的描述:`min_max=['Age','Height']`
+
+    ![image-20221218183330833](py-lea.assets/image-20221218183330833.png)
+
++ 通过groupby指定变量进行分组`groupby = 'death'`
+
+  ![image-20221218183845179](py-lea.assets/image-20221218183845179.png)
+
++ TableOne中P值与SMD的计算
+
+  + `pval = True`：计算并显示P-Value列结果(默认检验方法如下表)![image-20221218183940102](py-lea.assets/image-20221218183940102.png)
+
+  + `htest_name = True`：显示的校验的方法名(也可通过htest自定义校验的方法)
+
+  + `smd=True`：计算并显示标准化的均数差(SMD)
+
+    ![image-20221218184043044](py-lea.assets/image-20221218184043044.png)
+
++ TableOne中对变量进行排序
+
+  + `sort=True`: 将所有变量按照字典顺序进行排序
+  + `sort=‘P-Value’`：按照P-Value的值进行升序排列
+  + `sort=‘Missing'`：按照Missing的值进行升序
+  + `sort=‘Test'`：按照校验方法的名称的字典顺序进行排序
+
++ 使用rename变量对实现变量的重命名
+
+  + `rename = {‘Age’: ‘AGE’, ‘death’: ‘Mortality‘}`
+
++ TableOne的输出
+
+  + 控制台输出: `table.tabulate(tablefmt='fancy_grid’)`
+
+    ![页面从 4.1. 基线表、散点图与折线图](py-lea.assets/页面从 4.1. 基线表、散点图与折线图.jpg)
+
+### Matplotlib包
+
+> 绘图、直方图、功率谱、条形图、错误图、散点图等
+
++ 导入：`from matplotlib import pyplot`
+
+  `import matplotlib.pyplot as plt`
+
++ 主要思路：
+
+  1. 创建一个画布(figure)
+  2. 创建一个或多个绘图(plotting)区域(坐标轴/系、axess)
+  3. 在plotting区域描绘点、线等
+  4. 修饰plotting(添加标签，设置其他属性等)
+
+  **<center> ![](py-lea.assets/image-20221219211830700.png)![](py-lea.assets/image-20221219212211990.png) </center>**
+
+![image-20221219212307622](py-lea.assets/image-20221219212307622.png)
+
+#### 折线图绘制
+
++ 第一次执行plt.XXX()画图代码时，系统如果判断目前没有figure对
+  象，自动创建一个figure对象，并且在其上自动创建一个坐标系
+
+  ```python
+  time = range(0,24,3)
+  temp = [36.8, 37.2, 38.5, 38.2, 38.0, 37.5, 37.6, 36.8]
+  plt.plot(time,temp)
+  plt.show()
+  ```
+
+  <img src="py-lea.assets/image-20221219213743846.png" alt="image-20221219213743846" style="zoom:33%;" />
+
+1. 线条设置
+
+   + 颜色设置：`color='g'`
+
+     r 红色
+     g 绿色
+     b 蓝色
+     w 白色
+     c 青色
+     m 洋红
+     y 黄色
+     k 黑色
+     #00ff00 16进制
+
+     透明度：`alpha = 0.5`
+
+   + 风格设置:`linestyle = '--'`
+
+     ![image-20221219214317486](py-lea.assets/image-20221219214317486.png)
+
+     线条粗细：`linewidth=5.0`
+
+   + 标记字符设置`marker='o'`
+
+     <img src="py-lea.assets/image-20221219214626995.png" alt="image-20221219214626995" style="zoom:50%;" />
+
+     + 标记颜色：`markerfacecolor='b'`
+     + 标记尺寸:`markersize = 20`
+
+2. 标签设置
+
+   + X轴,Y轴的标签设置
+
+   ```python
+   plt.xlabel('Time’)
+   plt.ylabel('Temperture’)
+   plt.show()
+   ```
+
+   + Title设置
+
+   plt.title('Figure 1: Sample_Figure’)
+   plt.show()
+
+3. 坐标轴设置
+
+   + X轴、Y轴的范围设置`plt.xlim(0,21)
+     plt.ylim(35.0, 42.0)`
+
+   + X轴、Y轴的坐标刻度设置
+
+     ```python
+     date = ['8‐1', '8‐2', '8‐3', '8‐4’,
+     '8‐5', '8‐6', '8‐7', '8‐8']
+     plt.xticks(time, date, color='b', rotation=60)
+     plt.yticks([36, 38, 40, 42])
+     ```
+
+4. 多条折线图的绘制
+
+   + 使用`plt.legend()`,也可添加参数`loc='best'`或`loc=xxx`或`loc=(x,y)`
+   + 中文显示(仿宋字体):`plt.rcParams["font.family"] = "FangSong"`
+
+#### 散点图的绘制
+
+> 用于表征两个变量之间的相关性
+
+```python
+x = [0.1, 0.3, 0.3, 0.5, 0.9, 0.1, 0.6, 0.7, 0.8, 0.9]
+y = [0.8, 0.6, 0.7, 0.2, 0.6, 0.1, 0.3, 0.8, 0.5, 0.9]
+plt.scatter(x, y)
+plt.show()
+```
+
+<img src="py-lea.assets/image-20221219222052879.png" alt="image-20221219222052879" style="zoom:33%;" />
+
++ 点大小设置
+
+  - 大小统一设置`plt.scatter(x,y,s=200)`
+
+  - 自定义大小
+
+    ````python
+    area=[50,300,200,50,900,100,600,700,800,1200]
+    plt.scatter(x,y,s=area)
+    ````
+
++ 形状设置:`plt.scatter(...,marker='+')`
+
+  <img src="py-lea.assets/image-20221219222432552.png" alt="image-20221219222432552" style="zoom:80%;" />
+
++ 颜色与透明度:`plt.scatter(..., c='g',alpha=0.5)`
+
+  ```
+  colors = ['r','g','y','r','g','y','r','g','y','r']
+  plt.scatter(…, c=colors,…)
+  ```
+
+  + 使用颜色映射(colormap)
+
+    `plt.scatter(…, c=y, cmap='Greys', alpha=0.5)`
+
+    ![image-20221219223419765](py-lea.assets/image-20221219223419765.png)
+
++ 多组散点图
+
+  ```python
+  plt.scatter(x1,y1,c='r',label='X1‐Y1',marker='+')
+  plt.scatter(x2,y2,c='b',label='X2‐Y2',marker='^')
+  plt.xlabel('Variables x')
+  plt.ylabel('Variables y')
+  plt.title('Figure3:XXX')
+  plt.legend()
+  plt.show()
+  ```
+
+  <img src="py-lea.assets/image-20221219223724180.png" alt="image-20221219223724180" style="zoom:67%;" />
+
+#### 小结
+
+![image-20221219223852123](py-lea.assets/image-20221219223852123.png)
+
+
+
+
 
 ## 爬虫
 
@@ -743,7 +1017,6 @@
 1 获取网页内容:网址发送请求,返回整个网页书库
 2 解析网页内容:提取数据
 3 保存数据
-
 
 Request(获取)+Beautiful Soup(解析)
 Biopython库(Entrez模块),pymed库
@@ -1296,6 +1569,48 @@ print(title[0])
 
 ## 附录
 
+### 选取目录下文件数据分析
+
+```python
+import enum
+from pickle import TRUE
+import pandas as pd
+from pathlib import Path
+
+filepath = Path('python_res\\zonghe')
+df = pd.DataFrame()
+for index, file in enumerate(filepath.rglob("*.csv")):
+    # print(index,file.name)
+    data = pd.read_csv(file,na_values=' ')
+    if df.empty:
+        df = data
+    else:
+        df = pd.merge(df,data,how='outer')
+    newer = 'dataset_'+str(index+1)+'.csv'
+    file.rename(file.parent / newer)
+
+# 数据的排序
+df.sort_values(by='id',inplace=True)
+# 缺失值值删除
+df.dropna(how='all',inplace=True)
+# 重复值处理
+df.drop_duplicates(inplace=True)
+# 年龄进行面源切分
+ages = df.Age
+age_bins = [0,18,30,50,100]
+age_group = [1,2,3,4]
+df['Group'] = pd.cut(ages,age_bins, labels=age_group)
+# 分组变换
+df_div = pd.get_dummies(df,columns=['Group'],prefix='G')
+# 写入文件
+df_div.to_csv('./zonghe.csv',index=False)
+# print(df.tail())
+```
+
+
+
+
+
 ### 从Pubmed上面爬取论文题目,作者,摘要,DOI
 
 ```python
@@ -1410,3 +1725,6 @@ paper_data.to_excel('./paper.xlsx',index=False)
 
 + 面值,几块钱的多少张,计算总价值
 
+
+
+[^1]: If you use the tableone package, please cite:Pollard TJ, Johnson AEW, Raffa JD, Mark RG (2018). tableone: An open source Python package for producing summary statistics for research papers. JAMIA Open, Volume 1, Issue 1, 1 July 2018, Pages 26-31. https://doi.org/10.1093/jamiaopen/ooy012Create an instance of the tableone summary table.

@@ -112,5 +112,5 @@ print(df6)
 # 输出qcut方法得到的每组样本数量
 cats = pd.qcut(df7.Age,4)
 df7['Group'] = cats
-# print(df7)
+print(df7)
 print(pd.value_counts(cats))
